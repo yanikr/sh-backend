@@ -201,14 +201,24 @@ export const removeSuperhero = async (req, res) => {
       return res.status(404).json({ error: 'Superhero not found' });
     }
 
-    superhero.Images.forEach(async image => {
-      try {
-        const result = await cloudinary.uploader.destroy(image);
-        console.log(result);
-      } catch (err) {
-        console.error(err);
+    const imagePublicIds = superhero.Images.flatMap(image => {
+      if (
+        typeof image === 'string' &&
+        image.startsWith('https://res.cloudinary.com')
+      ) {
+        const publicId = image.split('/').pop().split('.')[0];
+        return [publicId];
       }
+      return [];
     });
+
+    // Remove images from Cloudinary
+    if (imagePublicIds.length > 0) {
+      const deleteResult = await cloudinary.api.delete_resources(
+        imagePublicIds
+      );
+      console.log(deleteResult);
+    }
 
     res.status(200).json({
       message: `Superhero ${superhero.nickname} removed successfully`,
