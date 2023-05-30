@@ -202,12 +202,12 @@ export const removeSuperhero = async (req, res) => {
     }
 
     superhero.Images.forEach(async image => {
-      const imagePath = `public/assets/${image}`;
-      fs.unlink(imagePath, err => {
-        if (err) {
-          console.error(err);
-        }
-      });
+      try {
+        const result = await cloudinary.uploader.destroy(image);
+        console.log(result);
+      } catch (err) {
+        console.error(err);
+      }
     });
 
     res.status(200).json({
