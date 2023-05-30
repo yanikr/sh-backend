@@ -34,6 +34,7 @@ const schema = new mongoose.Schema(
       default: [],
     },
   },
+  { timestamps: true },
   { versionKey: false }
 );
 
