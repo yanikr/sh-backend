@@ -7,6 +7,7 @@ import { uploadMiddleware } from './middlewares/index.js';
 import {
   addImage,
   createHero,
+  getHeroes,
   removeImages,
   removeSuperhero,
   updateHero,
@@ -21,6 +22,7 @@ app.use(cors());
 app.use('/assets', express.static(path.join(__dirname, 'public/assets')));
 
 app.post('/create', uploadMiddleware, createHero);
+app.get('/superheroes', getHeroes);
 app.patch('/:id', updateHero);
 app.delete('/:id', removeSuperhero);
 app.post('/:id/add-images', uploadMiddleware, addImage);

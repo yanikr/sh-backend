@@ -31,6 +31,14 @@ export const createHero = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+export const getHeroes = async (req, res) => {
+  try {
+    const heroesList = await Superhero.find({});
+    res.status(200).json(heroesList);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
 
 export const updateHero = async (req, res) => {
   try {
