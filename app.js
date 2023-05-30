@@ -3,7 +3,6 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-import { uploadMiddleware } from './middlewares/index.js';
 import {
   addImage,
   createHero,
@@ -12,6 +11,7 @@ import {
   removeSuperhero,
   updateHero,
 } from './controllers/heroes.js';
+import { uploadMiddleware } from './middlewares/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -26,4 +26,4 @@ app.get('/superheroes', getHeroes);
 app.patch('/:id', updateHero);
 app.delete('/:id', removeSuperhero);
 app.post('/:id/add-images', uploadMiddleware, addImage);
-app.patch('/:id/remove-images', uploadMiddleware, removeImages);
+app.patch('/:id/remove-images', removeImages);

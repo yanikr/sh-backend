@@ -1,6 +1,14 @@
 import fs from 'fs';
 import mongoose from 'mongoose';
+import cloudinary from 'cloudinary';
 import { Superhero } from '../models/Superhero.js';
+import dotenv from 'dotenv';
+dotenv.config();
+cloudinary.config({
+  cloud_name: `${process.env.CLOUDINARY_CLOUD_NAME}`,
+  api_key: `${process.env.CLOUDINARY_API_KEY}`,
+  api_secret: `${process.env.CLOUDINARY_API_SECRET}`,
+});
 
 export const createHero = async (req, res) => {
   try {
@@ -11,9 +19,19 @@ export const createHero = async (req, res) => {
       superpowers,
       catch_phrase,
     } = req.body;
-    let filenames = [];
-    if (req.files) {
-      filenames = req.files.map(file => file.filename);
+    const files = req.files;
+    const uploadedImages = [];
+    for (const file of files) {
+      const base64String = file.buffer.toString('base64');
+
+      const uploadResult = await cloudinary.uploader.upload(
+        `data:${file.mimetype};base64,${base64String}`,
+        {
+          folder: 'superheroes', // Specify the folder in Cloudinary where you want to store the images
+        }
+      );
+
+      uploadedImages.push(uploadResult.secure_url);
     }
 
     const newHero = new Superhero({
@@ -22,7 +40,7 @@ export const createHero = async (req, res) => {
       origin_description,
       superpowers,
       catch_phrase,
-      Images: filenames,
+      Images: uploadedImages,
     });
     console.log('files', req.files);
     const savedHero = await newHero.save();
@@ -31,6 +49,7 @@ export const createHero = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
 export const getHeroes = async (req, res) => {
   try {
     const heroesList = await Superhero.find({});
@@ -79,6 +98,7 @@ export const addImage = async (req, res) => {
   try {
     const { id } = req.params;
     const { files } = req;
+    console.log(files);
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(404).json({ error: 'Superhero not found' });
     }
@@ -88,11 +108,22 @@ export const addImage = async (req, res) => {
       return res.status(404).json({ error: 'Superhero not found' });
     }
 
-    const uploadedImages = Array.isArray(files)
-      ? files.map(file => file.filename)
-      : [files.filename];
+    const uploadedImages = [];
 
-    superhero.Images = [...superhero.Images, ...uploadedImages];
+    for (const file of files) {
+      const base64String = file.buffer.toString('base64');
+
+      const uploadResult = await cloudinary.uploader.upload(
+        `data:${file.mimetype};base64,${base64String}`,
+        {
+          folder: 'superheroes', // Specify the folder in Cloudinary where you want to store the images
+        }
+      );
+
+      uploadedImages.push(uploadResult.secure_url);
+    }
+
+    superhero.Images.push(...uploadedImages);
     const updatedSuperhero = await superhero.save();
 
     res.status(200).json(updatedSuperhero);
@@ -102,9 +133,15 @@ export const addImage = async (req, res) => {
 };
 
 export const removeImages = async (req, res) => {
+  const getPublicIdFromUrl = url => {
+    const parts = url.split('/');
+    const filename = parts[parts.length - 1];
+    const publicId = filename.split('.')[0];
+    return publicId;
+  };
   try {
     const { id } = req.params;
-    const { image } = req.body;
+    const { Images } = req.body;
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(404).json({ error: 'Superhero not found' });
     }
@@ -114,10 +151,23 @@ export const removeImages = async (req, res) => {
       return res.status(404).json({ error: 'Superhero not found' });
     }
 
-    superhero.Images = superhero.Images.filter(img => img !== image);
+    const deletedImages = [];
 
-    const imagePath = `public/assets/${image}`;
-    fs.unlinkSync(imagePath);
+    for (const image of Images) {
+      const imageIndex = superhero.Images.findIndex(img =>
+        img.startsWith(image)
+      );
+
+      if (imageIndex !== -1) {
+        const deletedImage = superhero.Images[imageIndex];
+        deletedImages.push(deletedImage);
+        await cloudinary.uploader.destroy(getPublicIdFromUrl(deletedImage));
+      }
+    }
+
+    superhero.Images = superhero.Images.filter(
+      img => !deletedImages.includes(img)
+    );
     const updatedSuperhero = await superhero.save();
 
     res.status(200).json(updatedSuperhero);
