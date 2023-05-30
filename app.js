@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import {
   addImage,
   createHero,
+  getHeroById,
   getHeroes,
   removeImages,
   removeSuperhero,
@@ -23,6 +24,7 @@ app.use('/assets', express.static(path.join(__dirname, 'public/assets')));
 
 app.post('/create', uploadMiddleware, createHero);
 app.get('/superheroes', getHeroes);
+app.get('/:id', getHeroById);
 app.patch('/:id', updateHero);
 app.delete('/:id', removeSuperhero);
 app.post('/:id/add-images', uploadMiddleware, addImage);

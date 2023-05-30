@@ -59,6 +59,19 @@ export const getHeroes = async (req, res) => {
   }
 };
 
+export const getHeroById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const hero = await Superhero.findById(id);
+    if (!hero) {
+      return res.status(404).json({ message: 'Not found' });
+    }
+    res.status(200).json(hero);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 export const updateHero = async (req, res) => {
   try {
     const { id } = req.params;
