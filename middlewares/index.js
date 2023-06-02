@@ -9,8 +9,6 @@ cloudinary.config({
 });
 
 const storage = multer.memoryStorage();
-
-// Set up multer upload middleware using the memory storage
 const upload = multer({ storage });
 
 export const uploadMiddleware = upload.array('Images', 5);

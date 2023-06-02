@@ -1,4 +1,3 @@
-import fs from 'fs';
 import mongoose from 'mongoose';
 import cloudinary from 'cloudinary';
 import { Superhero } from '../models/Superhero.js';
@@ -27,7 +26,7 @@ export const createHero = async (req, res) => {
       const uploadResult = await cloudinary.uploader.upload(
         `data:${file.mimetype};base64,${base64String}`,
         {
-          folder: 'superheroes', // Specify the folder in Cloudinary where you want to store the images
+          folder: 'superheroes',
         }
       );
 
@@ -42,7 +41,6 @@ export const createHero = async (req, res) => {
       catch_phrase,
       Images: uploadedImages,
     });
-    console.log('files', req.files);
     const savedHero = await newHero.save();
     res.status(201).json(savedHero);
   } catch (err) {
@@ -111,7 +109,6 @@ export const addImage = async (req, res) => {
   try {
     const { id } = req.params;
     const { files } = req;
-    console.log(files);
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(404).json({ error: 'Superhero not found' });
     }
@@ -129,7 +126,7 @@ export const addImage = async (req, res) => {
       const uploadResult = await cloudinary.uploader.upload(
         `data:${file.mimetype};base64,${base64String}`,
         {
-          folder: 'superheroes', // Specify the folder in Cloudinary where you want to store the images
+          folder: 'superheroes',
         }
       );
 
@@ -212,12 +209,10 @@ export const removeSuperhero = async (req, res) => {
       return [];
     });
 
-    // Remove images from Cloudinary
     if (imagePublicIds.length > 0) {
       const deleteResult = await cloudinary.api.delete_resources(
         imagePublicIds
       );
-      console.log(deleteResult);
     }
 
     res.status(200).json({
